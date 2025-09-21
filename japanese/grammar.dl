@@ -1,0 +1,103 @@
+.type Seq = [h: symbol, t: Seq]
+
+.decl token(i: number, t: symbol)
+.input token(IO=file, columns="0:1", delimiter=",")
+
+.decl tokeni(t: symbol, i: number)
+tokeni(t, autoinc()) :- token(_, t).
+
+.decl maxi(i: number)
+maxi(i) :- i = max n : tokeni(_, n).
+
+.decl sequence(s: Seq, i: number)
+sequence([t, nil], i) :- maxi(i), tokeni(t, i).
+sequence([t, seq], i-1) :- sequence(seq, i), tokeni(t, i-1).
+
+.decl sequence0(s: Seq)
+sequence0(s) :- sequence(s, 0).
+
+// Maybe a .component??
+//===============================================================
+
+.type Substantive = Noun | Pronoun
+.type Noun <: symbol
+.type Pronoun <: symbol
+.type Particle <: symbol
+.type ConjugatedVerb <: symbol
+
+.type SOV = [s: SubjectPhrase, o: ObjectPhrase, v: VerbPhrase]
+
+.type SP  = [s: SubjectPhrase, p: PredicatePhrase]
+
+.type SubjectPhrase = [n: Substantive, p: Particle]
+
+.type PredicatePhrase = [n: Substantive, v: ConjugatedVerb]
+
+.type ObjectPhrase = [n: Substantive, p: Particle]
+
+.type VerbPhrase = [
+  v: ConjugatedVerb
+]
+
+/*****
+ * Grammatical roles
+ *****/
+
+.input particle(IO=file)
+.decl particle(token: symbol)
+
+.input pronoun(IO=file)
+.decl pronoun(token: symbol)
+
+.decl noun(token: symbol, meaning: symbol)
+.input noun(IO=sqlite, dbname="sqlite.db")
+
+.decl verb(lemma: symbol, type: symbol, meaning: symbol)
+.input verb(IO=sqlite, dbname="sqlite.db") // facts are read from sqlite.db file
+
+.decl verb_conj(lemma: symbol, masu: symbol, te: symbol)
+.input verb_conj(IO=sqlite, dbname="sqlite.db") // facts are read from sqlite.db file
+
+.decl verb_masu(conjugated: symbol)
+verb_masu(conjugated) :-
+  verb_conj(_, conjugated, _).
+
+.decl verb_te(conjugated: symbol)
+verb_te(conjugated) :-
+  verb_conj(_, _, conjugated).
+
+.decl substantive(token: symbol)
+substantive(token) :- noun(token, _).
+substantive(token) :- pronoun(token).
+
+/*****
+ * Capturing statement components
+ * ex: watashi ha gakusei desu
+ ****/
+
+.decl subject_phrase(sp: SubjectPhrase, start: number, end: number)
+subject_phrase(sp, start, end) :-
+  sequence([s, [sm, _]], i),
+  substantive(s),
+  particle(sm),
+  sp = [s, sm],
+  start = i,
+  end = i+2.
+
+.decl predicate_phrase(pred: PredicatePhrase, start: number, end: number)
+predicate_phrase(pred, start, end) :-
+  sequence([o, [v, _]], i),
+  substantive(o),
+  verb_masu(v),
+  pred = [o, v],
+  start = i,
+  end = i+2.
+
+.decl sp_statement(sp: SP)
+sp_statement(sp) :-
+  subject_phrase(s, 0, end),
+  predicate_phrase(p, end, _),
+  sp = [s, p].
+
+
+.output sp_statement

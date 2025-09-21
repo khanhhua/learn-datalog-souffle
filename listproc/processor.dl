@@ -1,0 +1,19 @@
+.type Seq = [h: symbol, t: Seq]
+
+.decl token(t: symbol)
+.input token(IO=file)
+
+.decl tokeni(t: symbol, i: number)
+tokeni(t, autoinc()) :- token(t).
+
+.decl maxi(i: number)
+maxi(i) :- i = max n : tokeni(_, n).
+
+.decl sequence(s: Seq, i: number)
+sequence([t, nil], i) :- maxi(i), tokeni(t, i).
+sequence([t, seq], i-1) :- sequence(seq, i), tokeni(t, i-1).
+
+.decl sequence0(s: Seq)
+sequence0(s) :- sequence(s, 0).
+
+.output sequence0

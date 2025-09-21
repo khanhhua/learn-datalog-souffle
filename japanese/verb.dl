@@ -1,0 +1,8 @@
+.decl verb(lemma: symbol, type: symbol, meaning: symbol)
+.input verb(IO=sqlite, dbname="sqlite.db") // facts are read from sqlite.db file
+
+.decl verb_conj(lemma: symbol, masu: symbol, te: symbol)
+.input verb_conj(IO=sqlite, dbname="sqlite.db") // facts are read from sqlite.db file
+
+.output verb
+
