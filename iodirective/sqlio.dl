@@ -1,0 +1,13 @@
+.decl word(lemma: symbol, meaning: symbol, category: symbol)
+.input word(IO=sqlite, dbname="sqlite.db") // facts are read from sqlite.db file
+
+.decl noun(lemma: symbol, meaning: symbol)
+noun(n, m) :- word(n, m, "noun").
+
+.decl C(n: symbol, m: symbol)
+.output C // output appears in C.csv
+C(n, m) :- noun(n, m).
+
+.decl D(n: symbol)
+.printsize D // the number of facts in D is printed
+D(n) :- C(n, _).
