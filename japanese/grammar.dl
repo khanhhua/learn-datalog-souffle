@@ -124,5 +124,6 @@ sov_statement(sov) :-
   verb_phrase(v, end2, _),
   sov = [s, o, v].
 
+.output token
 .output sp_statement
 .output sov_statement
