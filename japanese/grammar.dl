@@ -95,7 +95,7 @@ predicate_phrase(pred, start, end) :-
 
 .decl sp_statement(sp: SP)
 sp_statement(sp) :-
-  subject_phrase(s, 0, end),
+  subject_phrase(s, _, end),
   predicate_phrase(p, end, _),
   sp = [s, p].
 
