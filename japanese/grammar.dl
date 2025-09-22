@@ -93,11 +93,36 @@ predicate_phrase(pred, start, end) :-
   start = i,
   end = i+2.
 
+.decl object_phrase(op: ObjectPhrase, start: number, end: number)
+object_phrase(op, start, end) :-
+  sequence([o, [p, _]], i),
+  substantive(o),
+  particle(p),
+  op = [o, p],
+  start = i,
+  end = i+2.
+
+.decl verb_phrase(vp: VerbPhrase, start: number, end: number)
+verb_phrase(vp, start, end) :-
+  sequence([v, _], i),
+  verb_masu(v),
+  vp = [v],
+  start = i,
+  end = i+1.
+
+
 .decl sp_statement(sp: SP)
 sp_statement(sp) :-
   subject_phrase(s, _, end),
   predicate_phrase(p, end, _),
   sp = [s, p].
 
+.decl sov_statement(sov: SOV)
+sov_statement(sov) :-
+  subject_phrase(s, _, end1),
+  object_phrase(o, end1, end2),
+  verb_phrase(v, end2, _),
+  sov = [s, o, v].
 
 .output sp_statement
+.output sov_statement
