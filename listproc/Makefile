@@ -1,7 +1,10 @@
 SC=/opt/homebrew/bin/souffle
 
+string:
+	$(SC) -D - $@.dl
+
 processor:
-	$(DC) -D - $@.dl
+	$(SC) -D - $@.dl
 
 seq:
 	$(SC) -D - ./seq.dl

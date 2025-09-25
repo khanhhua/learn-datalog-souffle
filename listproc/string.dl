@@ -1,0 +1,15 @@
+.decl token(t: symbol)
+token("書く").
+token("食べる").
+
+.decl ku_verb(t: symbol)
+ku_verb(t) :-
+  verb(t, "く").
+
+.decl verb(t: symbol, e: symbol)
+verb(t, e) :-
+  token(t),
+  e = substr(t, strlen(t) - 3, 3).
+
+.output verb
+.output ku_verb
