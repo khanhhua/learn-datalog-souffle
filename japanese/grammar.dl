@@ -25,19 +25,28 @@ sequence0(s) :- sequence(s, 0).
 .type Particle <: symbol
 .type ConjugatedVerb <: symbol
 
-.type SOV = [s: SubjectPhrase, o: ObjectPhrase, v: VerbPhrase]
+.type Statement 
+    = SimpleStatement {s: SubjectPhrase, v: VPhrase}
+    | SequentialStatement {s: SubjectPhrase, vseq: VSequence}
+    | PredicateStatement {s: SubjectPhrase, p: PredicatePhrase}
 
-.type SP  = [s: SubjectPhrase, p: PredicatePhrase]
 
-.type SubjectPhrase = [n: Substantive, p: Particle]
+.type SubjectPhrase = SubjectPhrase {n: Substantive,
+                                     p: Particle}
 
-.type PredicatePhrase = [n: Substantive, v: ConjugatedVerb]
+.type PredicatePhrase = PredicatePhrase {n: Substantive,
+                                         v: ConjugatedVerb}
 
-.type ObjectPhrase = [n: Substantive, p: Particle]
+.type VPhrase = VerbPhrase {v: ConjugatedVerb }
+              | ObjectVerbPhrase {o: Substantive,
+                                  p: Particle,
+                                  v: ConjugatedVerb}
 
-.type VerbPhrase = [
-  v: ConjugatedVerb
-]
+.type VSequence = TePhrase {head: VPhrase,
+                            next: VSequence}
+                | ConjugatedPhrase {head: VPhrase,
+                                    vp: VPhrase }
+
 
 /*****
  * Grammatical roles
@@ -52,19 +61,29 @@ sequence0(s) :- sequence(s, 0).
 .decl noun(token: symbol, meaning: symbol)
 .input noun(IO=sqlite, dbname="sqlite.db")
 
-.decl verb(lemma: symbol, type: symbol, meaning: symbol)
+.decl verb(lemma: symbol, type: symbol, meaning: symbol, ending: symbol, transivity: symbol)
 .input verb(IO=sqlite, dbname="sqlite.db") // facts are read from sqlite.db file
 
 .decl verb_conj(lemma: symbol, masu: symbol, te: symbol)
 .input verb_conj(IO=sqlite, dbname="sqlite.db") // facts are read from sqlite.db file
 
-.decl verb_masu(conjugated: symbol)
-verb_masu(conjugated) :-
-  verb_conj(_, conjugated, _).
+.decl verb_masu(lemma: symbol, conjugated: symbol)
+verb_masu(lemma, conjugated) :-
+  verb_conj(lemma, conjugated, _).
 
-.decl verb_te(conjugated: symbol)
-verb_te(conjugated) :-
-  verb_conj(_, _, conjugated).
+.decl verb_stem_ending(lemma: symbol, stem: symbol, ending: symbol)
+verb_stem_ending(lemma, stem, ending) :-
+  verb(lemma, _, _, ending, _),
+  stem = substr(lemma, 0, strlen(lemma) - 3).
+
+.decl verb_te(lemma: symbol, conjugated: symbol)
+verb_te(lemma, cat(stem, "いて")) :-
+  verb(lemma, "godan", _, _, _),
+  verb_stem_ending(lemma, stem, "く").
+
+verb_te(lemma, cat(stem, "て")) :-
+  verb(lemma, "ichidan", _, _, _),
+  verb_stem_ending(lemma, stem, "る").
 
 .decl substantive(token: symbol)
 substantive(token) :- noun(token, _).
@@ -80,7 +99,7 @@ subject_phrase(sp, start, end) :-
   sequence([s, [sm, _]], i),
   substantive(s),
   particle(sm),
-  sp = [s, sm],
+  sp = $SubjectPhrase(s, sm),
   start = i,
   end = i+2.
 
@@ -88,41 +107,93 @@ subject_phrase(sp, start, end) :-
 predicate_phrase(pred, start, end) :-
   sequence([o, [v, _]], i),
   substantive(o),
-  verb_masu(v),
-  pred = [o, v],
+  verb_masu(_, v),
+  pred = $PredicatePhrase(o, v),
   start = i,
   end = i+2.
 
-.decl object_phrase(op: ObjectPhrase, start: number, end: number)
-object_phrase(op, start, end) :-
-  sequence([o, [p, _]], i),
-  substantive(o),
-  particle(p),
-  op = [o, p],
-  start = i,
-  end = i+2.
-
-.decl verb_phrase(vp: VerbPhrase, start: number, end: number)
+.decl verb_phrase(vp: VPhrase, start: number, end: number)
 verb_phrase(vp, start, end) :-
   sequence([v, _], i),
-  verb_masu(v),
-  vp = [v],
+  verb_masu(lemma, v),
+  verb(lemma, _, _, _, "vi"),
+  vp = $VerbPhrase(v),
   start = i,
   end = i+1.
 
+verb_phrase(vp, start, end) :-
+  sequence([o, [p, [v, _]]], i),
+  substantive(o),
+  particle(p),
+  verb_masu(lemma, v),
+  verb(lemma, _, _, _, "vt"),
+  vp = $ObjectVerbPhrase(o, p, v),
+  start = i,
+  end = i + 3.
 
-.decl sp_statement(sp: SP)
-sp_statement(sp) :-
+.decl verb_te_phrase(vp: VPhrase, start: number, end: number)
+verb_te_phrase(vp, start, end) :-
+  sequence([v, _], i),
+  verb_te(vi, v),
+  verb(vi, _, _, _, "vi"),
+  vp = $VerbPhrase(v),
+  start = i,
+  end = i+1.
+
+.decl object_verb_te_phrase(ovp: VPhrase, start: number, end: number)
+object_verb_te_phrase(ovp, start, end) :-
+  sequence([o, [p, [v, _]]], i),
+  substantive(o),
+  particle(p),
+  verb_te(vt, v),
+  verb(vt, _, _, _, "vt"),
+  ovp = $ObjectVerbPhrase(o, p, v),
+  start = i,
+  end = i + 3.
+
+.decl te_phrase(phrase: VPhrase, start: number, end: number)
+te_phrase(phrase, start, end) :-
+  (verb_te_phrase(phrase, start, end); object_verb_te_phrase(phrase, start, end)).
+
+
+.decl verb_sequence(vseq: VSequence, start: number, end: number)
+verb_sequence(vseq, start, end) :-
+  te_phrase(tp, start, end1),
+  verb_phrase(vp, end1, end),
+  
+  vseq = $ConjugatedPhrase(tp, vp).
+
+verb_sequence(vseq, start, end) :-
+  te_phrase(head, start, end1),
+  verb_sequence(next, end1, end),
+  vseq = $TePhrase(head, next).
+
+.decl statement(st: Statement)
+statement(st) :-
   subject_phrase(s, _, end),
   predicate_phrase(p, end, _),
-  sp = [s, p].
+  st = $PredicateStatement(s, p).
 
-.decl sov_statement(sov: SOV)
-sov_statement(sov) :-
+statement(st) :-
   subject_phrase(s, _, end1),
-  object_phrase(o, end1, end2),
-  verb_phrase(v, end2, _),
-  sov = [s, o, v].
+  verb_phrase(v, end1, _),
+  st = $SimpleStatement(s, v).
 
-.output sp_statement
-.output sov_statement
+statement(st) :-
+  subject_phrase(s, _, end1),
+  verb_sequence(vseq, end1, _),
+  st = $SequentialStatement(s, vseq).
+
+.decl debug(vp: VPhrase, start: number, end: number)
+debug(vp, start, end) :-
+  sequence([o, [p, [v, _]]], i),
+  substantive(o),
+  particle(p),
+  verb_masu(lemma, v),
+  verb(lemma, _, _, _, _),
+  vp = $ObjectVerbPhrase(o,p,v),
+  start = i,
+  end = i+3.
+
+.output token
+.output statement
