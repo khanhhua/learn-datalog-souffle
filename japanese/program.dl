@@ -1,0 +1,10 @@
+#include "dict.dl"
+#include "rune.dl"
+#include "grammar.dl"
+
+.type InputString <: symbol
+.decl input_string(s: InputString)
+.input input_string(IO=stdin)
+
+.output sequence0
+.output statement

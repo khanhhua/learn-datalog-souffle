@@ -1,31 +1,10 @@
-.type Seq = [h: symbol, t: Seq]
-
-.decl token(i: number, t: symbol)
-.input token(IO=file, columns="0:1", delimiter=",")
-
-.decl tokeni(t: symbol, i: number)
-tokeni(t, autoinc()) :- token(_, t).
-
-.decl maxi(i: number)
-maxi(i) :- i = max n : tokeni(_, n).
-
-.decl sequence(s: Seq, i: number)
-sequence([t, nil], i) :- maxi(i), tokeni(t, i).
-sequence([t, seq], i-1) :- sequence(seq, i), tokeni(t, i-1).
-
-.decl sequence0(s: Seq)
-sequence0(s) :- sequence(s, 0).
-
-// Maybe a .component??
-//===============================================================
-
 .type Substantive = Noun | Pronoun
-.type Noun <: symbol
-.type Pronoun <: symbol
-.type Particle <: symbol
-.type ConjugatedVerb <: symbol
+.type Noun <: Token
+.type Pronoun <: Token
+.type Particle <: Token
+.type ConjugatedVerb <: Token
 
-.type Statement 
+.type Statement
     = SimpleStatement {s: SubjectPhrase, v: VPhrase}
     | SequentialStatement {s: SubjectPhrase, vseq: VSequence}
     | PredicateStatement {s: SubjectPhrase, p: PredicatePhrase}
@@ -51,22 +30,6 @@ sequence0(s) :- sequence(s, 0).
 /*****
  * Grammatical roles
  *****/
-
-.input particle(IO=file)
-.decl particle(token: symbol)
-
-.input pronoun(IO=file)
-.decl pronoun(token: symbol)
-
-.decl noun(token: symbol, meaning: symbol)
-.input noun(IO=sqlite, dbname="sqlite.db")
-
-.decl verb(lemma: symbol, type: symbol, meaning: symbol, ending: symbol, transivity: symbol)
-.input verb(IO=sqlite, dbname="sqlite.db") // facts are read from sqlite.db file
-
-.decl verb_conj(lemma: symbol, masu: symbol, te: symbol)
-.input verb_conj(IO=sqlite, dbname="sqlite.db") // facts are read from sqlite.db file
-
 .decl verb_masu(lemma: symbol, conjugated: symbol)
 verb_masu(lemma, conjugated) :-
   verb_conj(lemma, conjugated, _).
@@ -77,9 +40,33 @@ verb_stem_ending(lemma, stem, ending) :-
   stem = substr(lemma, 0, strlen(lemma) - 3).
 
 .decl verb_te(lemma: symbol, conjugated: symbol)
+verb_te("だ", "で").
+verb_te("する", "して").
+verb_te("来る", "来て").
+verb_te("行く", "行って").
+
 verb_te(lemma, cat(stem, "いて")) :-
   verb(lemma, "godan", _, _, _),
   verb_stem_ending(lemma, stem, "く").
+
+verb_te(lemma, cat(stem, "いで")) :-
+  verb(lemma, "godan", _, _, _),
+  verb_stem_ending(lemma, stem, "ぐ").
+
+verb_te(lemma, cat(stem, "って")) :-
+  verb(lemma, "godan", _, _, _),
+  (ending = "う"; ending = "つ"; ending = "る"),
+  verb_stem_ending(lemma, stem, ending).
+
+verb_te(lemma, cat(stem, "んで")) :-
+  verb(lemma, "godan", _, _, _),
+  (ending = "ぬ"; ending = "ぶ"; ending = "む"),
+  verb_stem_ending(lemma, stem, ending).
+
+verb_te(lemma, cat(stem, "して")) :-
+  verb(lemma, "godan", _, _, _),
+  verb_stem_ending(lemma, stem, "す").
+
 
 verb_te(lemma, cat(stem, "て")) :-
   verb(lemma, "ichidan", _, _, _),
@@ -195,5 +182,3 @@ debug(vp, start, end) :-
   start = i,
   end = i+3.
 
-.output token
-.output statement
