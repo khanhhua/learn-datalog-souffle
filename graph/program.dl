@@ -1,0 +1,65 @@
+.type Node <: symbol
+
+.decl edge(from: Node, to: Node, cost: number)
+.input edge(IO=file, delimiter=",")
+
+.decl start(node: Node)
+start(node) :-
+  edge(node, _, _),
+  !edge(_, node, _).
+
+.decl end(node: Node)
+end(node) :-
+  edge(_ , node, _),
+  !edge(node, _, _).
+
+.decl min_flow(from: Node, to: Node, cost: number)
+min_flow(from, to, cost) :-
+  edge(from, to, cost),
+  cost = min c: edge(_, _, c).
+
+.decl min_flow_from(from: Node, to: Node, cost: number)
+min_flow_from(from, to, cost) :-
+  edge(from, _, _),
+  cost = min c: edge(from, to, c).
+
+.output start
+.output end
+.output min_flow_from
+.output flow
+
+//=======================
+.type Flow = [a: Node, b: Node]
+.decl flow(t: number, f: Flow, cost: number)
+flow(0, [a, b], cost) :-
+  start(a),
+  edge(a, b, cost).
+
+flow(t, [a, b], cost) :-
+  flow(t0, [_, a], _),
+  t = t0 + 1,
+  edge(a, b, cost).
+
+//=======================
+.type Seq = [cost: number, head: Flow, prev: Seq]
+.decl seq(s: Seq)
+seq(s) :-
+  flow(0, f, cost),
+  s = [cost, f, nil].
+
+seq(s) :-
+  seq(s0),
+  [cost0, [a,b], _] = s0,
+  flow(t0, [a,b], _),
+  flow(t0 + 1, [b,c], cost),
+  s = [cost0 + cost, [b,c], s0].
+
+.decl seqz(s: Seq)
+seqz(s) :-
+  seq(s),
+  end(z),
+  [_, [_, z], _] = s.
+
+.output seqz
+//=======================
+
