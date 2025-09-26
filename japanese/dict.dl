@@ -1,0 +1,20 @@
+.type Dict <: symbol
+
+.input particle(IO=file)
+.decl particle(token: symbol)
+
+.input pronoun(IO=file)
+.decl pronoun(token: symbol)
+
+.decl noun(token: symbol, meaning: symbol)
+.input noun(IO=sqlite, dbname="sqlite.db")
+
+.decl verb(lemma: symbol, type: symbol, meaning: symbol, ending: symbol, transivity: symbol)
+.input verb(IO=sqlite, dbname="sqlite.db") // facts are read from sqlite.db file
+
+.decl verb_conj(lemma: symbol, masu: symbol, te: symbol)
+.input verb_conj(IO=sqlite, dbname="sqlite.db") // facts are read from sqlite.db file
+
+.decl dict(d: Dict)
+dict(as(token, Dict)) :-
+  (pronoun(token); particle(token); noun(token, _); verb_conj(_, token, _); verb_conj(_, _, token)).

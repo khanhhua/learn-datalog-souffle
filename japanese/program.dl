@@ -1,3 +1,5 @@
+#include "dict.dl"
+
 .type InputString <: symbol
 .decl input_string(s: InputString)
 .input input_string(IO=stdin)
@@ -26,5 +28,35 @@ rune_seq(i, seq) :-
   rune(i, r),
   seq = [r, seq0].
 
-.output rune
+.decl rune_seq0(seq: Seq)
+rune_seq0(seq) :-
+  rune_seq(0, seq).
+
+.output rune_seq0
 .output rune_seq
+.output tokenis
+
+//===============================
+
+.type Token <: symbol
+.decl tokenis(i: number, start: number, t: Token)
+tokenis(0, 0, as(a, Token)) :-
+  rune_seq0([a, _]),
+  dict(a).
+tokenis(0, 0, as(token, Token)) :-
+  rune_seq0([a, [b, _]]),
+  token = cat(a, b),
+  dict(token).
+tokenis(0, 0, as(token, Token)) :-
+  rune_seq0([a, [b, [c, _]]]),
+  token = cat(cat(a, b), c),
+  dict(token).
+
+tokenis(i, s, as(token, Token)) :-
+  tokenis(i0, s0, token0),
+  i = i0 + 1,
+  s = s0 + strlen(token0) / 3,
+  ( rune_seq(s, [token,  _]), dict(token);
+    rune_seq(s, [a, [b, _]]), token = cat(a, b), dict(token);
+    rune_seq(s, [a, [b, [c, _]]]), token = cat(cat(a, b), c), dict(token)
+  ).
