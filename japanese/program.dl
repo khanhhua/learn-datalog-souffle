@@ -1,0 +1,30 @@
+.type InputString <: symbol
+.decl input_string(s: InputString)
+.input input_string(IO=stdin)
+
+.type Rune <: symbol
+.decl rune(i: number, r: Rune)
+rune(i, r) :-
+  input_string(s),
+  i = range(0, strlen(s) / 3),
+  r = substr(s, i * 3, 3).
+
+.decl last_rune(i: number, r: Rune)
+last_rune(i, r) :-
+  i = max j: rune(j, r).
+
+.type Seq = [h: symbol, next: Seq]
+
+.decl rune_seq(i: number, seq: Seq)
+rune_seq(last, seq) :-
+  last_rune(last, r),
+  seq = [r, nil].
+
+rune_seq(i, seq) :-
+  rune_seq(i0, seq0),
+  i = i0 - 1,
+  rune(i, r),
+  seq = [r, seq0].
+
+.output rune
+.output rune_seq
