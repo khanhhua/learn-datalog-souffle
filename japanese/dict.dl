@@ -7,14 +7,14 @@
 .decl pronoun(token: symbol)
 
 .decl noun(token: symbol, meaning: symbol)
-.input noun(IO=sqlite, dbname="sqlite.db")
+.input noun(IO=file, delimiter=",")
 
 .decl verb(lemma: symbol, type: symbol, meaning: symbol, ending: symbol, transivity: symbol)
-.input verb(IO=sqlite, dbname="sqlite.db") // facts are read from sqlite.db file
+.input verb(IO=file, delimiter=",")
 
-.decl verb_conj(lemma: symbol, masu: symbol, te: symbol)
-.input verb_conj(IO=sqlite, dbname="sqlite.db") // facts are read from sqlite.db file
+.decl verb_conj(lemma: symbol, masu: symbol)
+.input verb_conj(IO=file, delimiter=",")
 
 .decl dict(d: Dict)
 dict(as(token, Dict)) :-
-  (pronoun(token); particle(token); noun(token, _); verb_conj(_, token, _); verb_te(_, token)).
+  (pronoun(token); particle(token); noun(token, _); verb_conj(_, token); verb_te(_, token)).

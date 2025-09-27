@@ -32,7 +32,7 @@
  *****/
 .decl verb_masu(lemma: symbol, conjugated: symbol)
 verb_masu(lemma, conjugated) :-
-  verb_conj(lemma, conjugated, _).
+  verb_conj(lemma, conjugated).
 
 .decl verb_stem_ending(lemma: symbol, stem: symbol, ending: symbol)
 verb_stem_ending(lemma, stem, ending) :-
