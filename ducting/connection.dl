@@ -11,6 +11,7 @@
 .decl start_node(id: symbol)
 .decl end_node(id: symbol)
 .decl duct(d: Ducting, i: number)
+.decl connection(d: Ducting)
 
 device($Device("a", [0,0])).
 device($Device("b", [3,2])).
@@ -59,7 +60,11 @@ duct(ducting, i0 + 1) :-
   ),
   ducting = [$Device(start, [dx, dy]), duct0].
 
+connection(ducting) :-
+  duct(ducting, _),
+  [$Device(_, _), [_, _]] = ducting.
+
 .output device
 .output joint
-.output duct
+.output connection
 .output start_node
