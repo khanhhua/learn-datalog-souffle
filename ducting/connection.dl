@@ -1,0 +1,65 @@
+.type Coord = [x: number, y: number]
+.type DirectionalIO = [out: symbol, in: symbol]
+.type Ducting = [node: Node, next: Ducting]
+.type Node = Device {id: symbol, coord: Coord}
+           | Joint {id: number, coord: Coord, pair: DirectionalIO}
+
+.decl make_joint(id: number, coord: Coord, pair: DirectionalIO)
+.decl joint(j: Node)
+.decl device(n: Node)
+.decl flow(out: symbol, in: symbol)
+.decl start_node(id: symbol)
+.decl end_node(id: symbol)
+.decl duct(d: Ducting, i: number)
+
+device($Device("a", [0,0])).
+device($Device("b", [3,2])).
+flow("a", "b").
+
+start_node(node) :-
+  flow(node, _),
+  !flow(_, node).
+
+end_node(node) :-
+  flow(_, node),
+  !flow(node, _).
+
+make_joint(autoinc(), [x, y], pair) :-
+  ( device($Device(out, [x, _])), device($Device(in, [_, y]));
+    device($Device(out, [_, y])), device($Device(in, [x, _]))
+  ),
+  flow(out, in),
+  pair = [out, in].
+
+joint($Joint(i, coord, pair)) :-
+  make_joint(i, coord, pair).
+
+duct([device0, nil], 0) :-
+  device(device0),
+  $Device(id, _) = device0,
+  end_node(id).
+
+duct(ducting, i0 + 1) :-
+  duct(duct0, i0),
+  [$Device(node0, _), _] = duct0,
+  !start_node(node0),
+  joint($Joint(joint_id, [jx, jy], pair)),
+  ( device($Device(node0, [x, _])), jx = x;
+    device($Device(node0, [_, y])), jy = y
+  ),
+  ducting = [$Joint(joint_id, [jx, jy], pair), duct0].
+
+duct(ducting, i0 + 1) :-
+  duct(duct0, i0),
+  [$Joint(joint_id, _, _), _] = duct0,
+  start_node(start),
+  device($Device(start, [dx, dy])),
+  ( joint($Joint(joint_id, [x, _], _)), dx = x;
+    joint($Joint(joint_id, [_, y], _)), dy = y
+  ),
+  ducting = [$Device(start, [dx, dy]), duct0].
+
+.output device
+.output joint
+.output duct
+.output start_node
