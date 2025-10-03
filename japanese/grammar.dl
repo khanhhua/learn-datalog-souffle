@@ -30,14 +30,66 @@
 /*****
  * Grammatical roles
  *****/
-.decl verb_masu(lemma: symbol, conjugated: symbol)
-verb_masu(lemma, conjugated) :-
-  verb_conj(lemma, conjugated).
-
 .decl verb_stem_ending(lemma: symbol, stem: symbol, ending: symbol)
 verb_stem_ending(lemma, stem, ending) :-
   verb(lemma, _, _, ending, _),
   stem = substr(lemma, 0, strlen(lemma) - 3).
+
+.decl verb_masu(lemma: symbol, conjugated: symbol)
+verb_masu(lemma, conjugated) :-
+  verb_conj(lemma, conjugated).
+
+verb_masu(lemma, cat(stem, "います")) :-
+  !verb_conj(lemma, _),
+  verb(lemma, "godan", _, _, _),
+  verb_stem_ending(lemma, stem, "う").
+
+verb_masu(lemma, cat(stem, "きます")) :-
+  !verb_conj(lemma, _),
+  verb(lemma, "godan", _, _, _),
+  verb_stem_ending(lemma, stem, "く").
+
+verb_masu(lemma, cat(stem, "ぎます")) :-
+  !verb_conj(lemma, _),
+  verb(lemma, "godan", _, _, _),
+  verb_stem_ending(lemma, stem, "ぐ").
+
+verb_masu(lemma, cat(stem, "びます")) :-
+  !verb_conj(lemma, _),
+  verb(lemma, "godan", _, _, _),
+  verb_stem_ending(lemma, stem, "ぶ").
+
+verb_masu(lemma, cat(stem, "みます")) :-
+  !verb_conj(lemma, _),
+  verb(lemma, "godan", _, _, _),
+  verb_stem_ending(lemma, stem, "む").
+
+verb_masu(lemma, cat(stem, "します")) :-
+  !verb_conj(lemma, _),
+  verb(lemma, "godan", _, _, _),
+  verb_stem_ending(lemma, stem, "す").
+
+verb_masu(lemma, cat(stem, "ちます")) :-
+  !verb_conj(lemma, _),
+  verb(lemma, "godan", _, _, _),
+  verb_stem_ending(lemma, stem, "つ").
+
+verb_masu(lemma, cat(stem, "にます")) :-
+  !verb_conj(lemma, _),
+  verb(lemma, "godan", _, _, _),
+  verb_stem_ending(lemma, stem, "ぬ").
+
+verb_masu(lemma, cat(stem, "ります")) :-
+  !verb_conj(lemma, _),
+  verb(lemma, "godan", _, _, _),
+  verb_stem_ending(lemma, stem, "る").
+
+verb_masu(lemma, cat(stem, "ます")) :-
+  !verb_conj(lemma, _),
+  verb(lemma, "ichidan", _, _, _),
+  verb_stem_ending(lemma, stem, "る").
+
+.output verb_masu
 
 .decl verb_te(lemma: symbol, conjugated: symbol)
 verb_te("だ", "で").

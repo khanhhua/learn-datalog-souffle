@@ -17,4 +17,4 @@
 
 .decl dict(d: Dict)
 dict(as(token, Dict)) :-
-  (pronoun(token); particle(token); noun(token, _); verb_conj(_, token); verb_te(_, token)).
+  (pronoun(token); particle(token); noun(token, _); verb_masu(_, token); verb_te(_, token)).
