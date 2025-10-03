@@ -89,8 +89,6 @@ verb_masu(lemma, cat(stem, "ます")) :-
   verb(lemma, "ichidan", _, _, _),
   verb_stem_ending(lemma, stem, "る").
 
-.output verb_masu
-
 .decl verb_te(lemma: symbol, conjugated: symbol)
 verb_te("だ", "で").
 verb_te("する", "して").
